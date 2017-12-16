@@ -1,0 +1,5 @@
+-lib format
+-cp src
+-neko bin/gifMasher2.n
+-main gifMasher.Main
+-cmd nekotools boot bin/gifMasher2.n
