@@ -70,22 +70,25 @@ class GifRenderer{
 						if (y >= frame.y && y < frame.y + frame.height){ //if we have hit new pixels
 							
 							if(disposalMethod==FILL_BACKGROUND){
-								curBytes.blit(0, bgLine, 0, frame.x << 2);
+								curBytes.blit((y * width) << 2, bgLine, 0, frame.x << 2);
 								curBytes.blit((frame.x + frame.width) << 2, bgLine, 0, (width - (frame.x + frame.width)) << 2);
 							}else{ //TODO: special case for RENDER_PREVIOUS
 								if(fNum>0){
-									curBytes.blit(0, frames[fNum - 1], (y * width) << 2, frame.x << 2);
-									curBytes.blit(0, frames[fNum - 1], ((y * width) + frame.width) << 2, (width - (frame.x + frame.width)) << 2);
+									curBytes.blit((y * width) << 2, frames[fNum - 1], (y * width) << 2, frame.x << 2);
+									curBytes.blit((y * width + frame.width + frame.x) << 2, frames[fNum - 1], (y * width + frame.width + frame.x) << 2, (width - (frame.x + frame.width)) << 2);
+									/*if (fNum == 5){
+										trace('${(y * width) + frame.width}, ${width - (frame.x + frame.width)}');
+									}*/
 								}
 							}
 							
 						}else{ //otherwise
 							
 							if(disposalMethod==FILL_BACKGROUND){
-								curBytes.blit(0, bgLine, 0, bgLine.length);
+								curBytes.blit((y * width) << 2, bgLine, 0, bgLine.length);
 							}else{ //TODO: special case for RENDER_PREVIOUS
 								if (fNum > 0){
-									curBytes.blit(0, frames[fNum - 1], (y * width) << 2, width << 2);
+									curBytes.blit((y * width) << 2, frames[fNum - 1], (y * width) << 2, width << 2);
 								}
 							}
 						}
@@ -93,8 +96,8 @@ class GifRenderer{
 					}
 					
 					//NOW RENDER THE NEW PIXELS
-					//var y = (tn >= (frame.y % tt)) ? Math.floor(frame.y / tt) * tt + tn : Math.ceil(frame.y / tt) * tt + tn;
-					var y = frame.y;
+					var y = (tn >= (frame.y % tt)) ? Math.floor(frame.y / tt) * tt + tn : Math.ceil(frame.y / tt) * tt + tn;
+					//var y = frame.y;
 					var srcPos = 0;
 					while (y < frame.y + frame.height){
 						
@@ -111,10 +114,10 @@ class GifRenderer{
 									color = 0;
 								}
 							}else{
-								color = 0xff000000 | (ct.get(ind) << 16) | (ct.get(ind + 1) << 8) | ct.get(ind + 2); //TODO: make a method to retrive colors from color table
+								color = 0xff000000 | (ct.get(ind) << 16) | (ct.get(ind + 1) << 8) | ct.get(ind + 2); //TODO: make a method to retrieve colors from color table
 							}
 							
-							curBytes.setInt32(((y*width + x) << 2), color);
+							curBytes.setInt32(((y * width + x) << 2), color);
 							
 							x++;
 							srcPos++;
