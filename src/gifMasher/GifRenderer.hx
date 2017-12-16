@@ -25,9 +25,10 @@ class GifRenderer{
 		var width = data.logicalScreenDescriptor.width;
 		var height = data.logicalScreenDescriptor.height;
 		
+		var gce: GraphicControlExtension=null;
+		
 		var disposalMethod = DisposalMethod.NO_ACTION;
-		var hasTransparentColor = false;
-		var trIndex = 0;
+		var trIndex = -1;
 		var bgIndex = data.logicalScreenDescriptor.backgroundColorIndex*3;
 		
 		var ct: ColorTable = data.globalColorTable; //TODO: add a method to "uncompress" color tables if color resolution!=7
@@ -39,6 +40,9 @@ class GifRenderer{
 		blocks.iter(function(block){
 			switch(block){
 				case BFrame(frame): //if block is a frame
+					
+					var disposalMethod = (gce!=null) ? gce.disposalMethod : DisposalMethod.NO_ACTION;
+					var trIndex = (gce!=null && gce.hasTransparentColor) ? gce.transparentIndex*3 : -1;
 					
 					//trace('${frame.width}, ${frame.height}, $disposalMethod');
 					
@@ -62,8 +66,8 @@ class GifRenderer{
 					
 					var y: Int = tn;
 					while (y < height){
-						//trace('$fNum');
-						if (y >= frame.y && y < frame.y + frame.height){
+						
+						if (y >= frame.y && y < frame.y + frame.height){ //if we have hit new pixels
 							
 							if(disposalMethod==FILL_BACKGROUND){
 								curBytes.blit(0, bgLine, 0, frame.x << 2);
@@ -75,7 +79,7 @@ class GifRenderer{
 								}
 							}
 							
-						}else{
+						}else{ //otherwise
 							
 							if(disposalMethod==FILL_BACKGROUND){
 								curBytes.blit(0, bgLine, 0, bgLine.length);
@@ -93,14 +97,27 @@ class GifRenderer{
 					var srcPos = 0;
 					while (y < frame.height){
 						var x = frame.x << 2;
+						
 						while (x < frame.width << 2){
-							var ind = frame.pixels.get(srcPos)*3;
-							var color = ct.get(ind) << 24 | ct.get(ind) << 16 | ct.get(ind) << 8;
-							color += (ind == trIndex) ? 0 : 0xff;
+							
+							var ind = frame.pixels.get(srcPos) * 3;
+							var color: Int;
+							
+							/*if (ind == trIndex){
+								if (fNum > 0){
+									color = frames[fNum - 1].getInt32(((y*frame.width) << 2) + x);
+								}else{
+									color = 0;
+								}
+							}else{
+								color=ct.get(ind) << 24 | ct.get(ind) << 16 | ct.get(ind) << 8 | 0xff;
+							}*/
+							color = 0xff0000ff;
 							curBytes.setInt32(((y*frame.width) << 2) + x, color);
 							
 							x += 4;
 							srcPos++;
+							
 						}
 						
 						y += tt;
@@ -108,14 +125,13 @@ class GifRenderer{
 					}
 					
 					fNum++;
+					gce = null;
 					
 				case BExtension(ext): //if block is an extension
 					
 					switch(ext){
-						case EGraphicControl(gce):
-							disposalMethod = gce.disposalMethod;
-							hasTransparentColor = gce.hasTransparentColor;
-							trIndex = gce.transparentIndex*3;
+						case EGraphicControl(g):
+							gce = g;
 						default:
 							//skip all other extensions
 					}
