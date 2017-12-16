@@ -56,8 +56,8 @@ class GifRenderer{
 					var bgLine: Bytes=null;
 					if (disposalMethod == DisposalMethod.FILL_BACKGROUND){
 						bgLine = Bytes.alloc(width << 2);
-						var bgColor: Int = ct.get(bgIndex) << 24 | ct.get(bgIndex) << 16 | ct.get(bgIndex) << 8;
-						bgColor += (bgIndex == trIndex) ? 0 : 0xff;
+						var bgColor: Int = (ct.get(bgIndex) << 16) | (ct.get(bgIndex+1) << 8) | ct.get(bgIndex+2);
+						bgColor += (bgIndex == trIndex) ? 0 : 0xff000000;
 						
 						for (i in 0...width){
 							bgLine.setInt32(i<<2, bgColor);
@@ -93,29 +93,30 @@ class GifRenderer{
 					}
 					
 					//NOW RENDER THE NEW PIXELS
-					y = (tn >= (frame.y % tt)) ? Math.floor(frame.y / tt) * tt + tn : Math.ceil(frame.y / tt) * tt + tn;
+					//var y = (tn >= (frame.y % tt)) ? Math.floor(frame.y / tt) * tt + tn : Math.ceil(frame.y / tt) * tt + tn;
+					var y = frame.y;
 					var srcPos = 0;
-					while (y < frame.height){
-						var x = frame.x << 2;
+					while (y < frame.y + frame.height){
 						
-						while (x < frame.width << 2){
+						var x = frame.x;
+						while (x < frame.x + frame.width){
 							
 							var ind = frame.pixels.get(srcPos) * 3;
 							var color: Int;
 							
-							/*if (ind == trIndex){
+							if (ind == trIndex){
 								if (fNum > 0){
-									color = frames[fNum - 1].getInt32(((y*frame.width) << 2) + x);
+									color = frames[fNum - 1].getInt32((y*width + x) << 2);
 								}else{
 									color = 0;
 								}
 							}else{
-								color=ct.get(ind) << 24 | ct.get(ind) << 16 | ct.get(ind) << 8 | 0xff;
-							}*/
-							color = 0xff0000ff;
-							curBytes.setInt32(((y*frame.width) << 2) + x, color);
+								color = 0xff000000 | (ct.get(ind) << 16) | (ct.get(ind + 1) << 8) | ct.get(ind + 2); //TODO: make a method to retrive colors from color table
+							}
 							
-							x += 4;
+							curBytes.setInt32(((y*width + x) << 2), color);
+							
+							x++;
 							srcPos++;
 							
 						}

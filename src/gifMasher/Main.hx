@@ -42,6 +42,8 @@ class Main {
 			Sys.exit(1);
 		}
 		
+		
+		
 		//decode the gif
 		trace("Starting to parse the gif...");
 		var start = Date.now();
@@ -66,7 +68,8 @@ class Main {
 		trace("Drawing frames");
 		for (i in 0...frames.length){
 			var writer = new format.png.Writer(File.write('frame$i.png'));
-			writer.write(Utils.makePNG(frames[i], gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height));
+			writer.write(format.png.Tools.build32ARGB(gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height, frames[i]));
+			//writer.write(Utils.makePNG(frames[i], gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height));
 		}
 		
 		Sys.exit(0);
