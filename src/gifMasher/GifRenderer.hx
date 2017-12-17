@@ -29,7 +29,7 @@ class GifRenderer{
 		
 		var disposalMethod = DisposalMethod.NO_ACTION;
 		var trIndex = -1;
-		var bgIndex = data.logicalScreenDescriptor.backgroundColorIndex*3;
+		var bgIndex = data.logicalScreenDescriptor.backgroundColorIndex;
 		
 		var ct: ColorTable = data.globalColorTable; //TODO: add a method to "uncompress" color tables if color resolution!=7
 		
@@ -42,7 +42,7 @@ class GifRenderer{
 				case BFrame(frame): //if block is a frame
 					
 					var disposalMethod = (gce!=null) ? gce.disposalMethod : DisposalMethod.NO_ACTION;
-					var trIndex = (gce!=null && gce.hasTransparentColor) ? gce.transparentIndex*3 : -1;
+					var trIndex = (gce!=null && gce.hasTransparentColor) ? gce.transparentIndex : -1;
 					
 					//trace('${frame.width}, ${frame.height}, $disposalMethod');
 					
@@ -53,10 +53,11 @@ class GifRenderer{
 					//RENDER THE BACKGROUND FIRST
 					
 					//create a background color line if disposal method is FILL_BACKGROUND
-					var bgLine: Bytes=null;
+					var bgLine: Bytes = null;
+					var bgColor: Int=0;
 					if (disposalMethod == DisposalMethod.FILL_BACKGROUND){
 						bgLine = Bytes.alloc(width << 2);
-						var bgColor: Int = (ct.get(bgIndex) << 16) | (ct.get(bgIndex+1) << 8) | ct.get(bgIndex+2);
+						bgColor = getColor(ct, bgIndex);
 						bgColor += (bgIndex == trIndex) ? 0 : 0xff000000;
 						
 						for (i in 0...width){
@@ -76,9 +77,6 @@ class GifRenderer{
 								if(fNum>0){
 									curBytes.blit((y * width) << 2, frames[fNum - 1], (y * width) << 2, frame.x << 2);
 									curBytes.blit((y * width + frame.width + frame.x) << 2, frames[fNum - 1], (y * width + frame.width + frame.x) << 2, (width - (frame.x + frame.width)) << 2);
-									/*if (fNum == 5){
-										trace('${(y * width) + frame.width}, ${width - (frame.x + frame.width)}');
-									}*/
 								}
 							}
 							
@@ -104,17 +102,19 @@ class GifRenderer{
 						var x = frame.x;
 						while (x < frame.x + frame.width){
 							
-							var ind = frame.pixels.get(srcPos) * 3;
+							var ind = frame.pixels.get(srcPos);
 							var color: Int;
 							
 							if (ind == trIndex){
-								if (fNum > 0){
+								if (disposalMethod == FILL_BACKGROUND){
+									color = bgColor; 
+								}else if (fNum > 0){
 									color = frames[fNum - 1].getInt32((y*width + x) << 2);
 								}else{
 									color = 0;
 								}
 							}else{
-								color = 0xff000000 | (ct.get(ind) << 16) | (ct.get(ind + 1) << 8) | ct.get(ind + 2); //TODO: make a method to retrieve colors from color table
+								color = 0xff000000 | getColor(ct, ind); //TODO: make a method to retrieve colors from color table
 							}
 							
 							curBytes.setInt32(((y * width + x) << 2), color);
@@ -145,6 +145,11 @@ class GifRenderer{
 			}
 		});
 		
+	}
+	
+	public static inline function getColor(ct: ColorTable, ind: Int): Int{
+		ind *= 3;
+		return (ct.get(ind) << 16) | (ct.get(ind + 1) << 8) | ct.get(ind + 2);
 	}
 	
 }

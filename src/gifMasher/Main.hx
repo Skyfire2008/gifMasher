@@ -65,9 +65,6 @@ class Main {
 		var end = Date.now();
 		trace('Gif rendered in ${(end.getTime()-start.getTime())/1000} seconds');
 		
-		var writer = new format.png.Writer(File.write("TestFrame.png"));
-		writer.write(format.png.Tools.build32BGRA(gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height, Tools.extractFullBGRA(gifData, 5)));
-		
 		trace("Drawing frames");
 		for (i in 0...frames.length){
 			var writer = new format.png.Writer(File.write('frame$i.png'));
