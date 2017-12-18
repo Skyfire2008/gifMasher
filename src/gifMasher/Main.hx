@@ -58,6 +58,9 @@ class Main {
 		var end = Date.now();
 		trace('Gif parsed in ${(end.getTime()-start.getTime())/1000} seconds');
 		
+		//PreProcess.revColorTables(gifData);
+		PreProcess.stretch(gifData);
+		
 		//allocate byte arrays
 		frames = new Array<Bytes>();
 		for (i in 0...Tools.framesCount(gifData)){
