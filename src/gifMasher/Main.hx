@@ -6,6 +6,9 @@ import haxe.io.Bytes;
 
 import neko.Lib;
 
+import neko.vm.Thread;
+import neko.vm.Lock;
+
 import sys.io.File;
 
 import gifMasher.ArgumentHandler;
@@ -25,6 +28,8 @@ class Main {
 	
 	static var path: String;
 	
+	static var tt: Int = 1;
+	
 	static var gifData: Data;
 	
 	static var frames: Array<Bytes>;
@@ -34,6 +39,9 @@ class Main {
 		handler.addArgOption("i".code, "input", function(arg: String){
 			path = arg;
 		});
+		handler.addArgOption("t".code, "threads", function(arg: String){
+			tt = Std.parseInt(arg);
+		});
 		
 		try{
 			handler.processArguments(Sys.args());
@@ -41,8 +49,6 @@ class Main {
 			stderr.writeString(cast(e, String)+"\n");
 			Sys.exit(1);
 		}
-		
-		
 		
 		//decode the gif
 		trace("Starting to parse the gif...");
@@ -61,7 +67,18 @@ class Main {
 		//render the frames
 		trace("Starting to render the gif...");
 		var start = Date.now();
-		GifRenderer.render(gifData, frames, 0, 1);
+		if (tt != 1){
+			var lock = new Lock();
+			for (i in 0...tt){
+				Thread.create(GifRenderer.render.bind(gifData, frames, i, tt, lock));
+			}
+			for (i in 0...tt){
+				lock.wait();
+			}
+		}else{
+			GifRenderer.render(gifData, frames, 0, 1, null);
+		}
+		
 		var end = Date.now();
 		trace('Gif rendered in ${(end.getTime()-start.getTime())/1000} seconds');
 		
@@ -69,7 +86,6 @@ class Main {
 		for (i in 0...frames.length){
 			var writer = new format.png.Writer(File.write('frame$i.png'));
 			writer.write(format.png.Tools.build32BGRA(gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height, frames[i]));
-			//writer.write(Utils.makePNG(frames[i], gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height));
 		}
 		
 		Sys.exit(0);

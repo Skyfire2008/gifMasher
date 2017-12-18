@@ -3,6 +3,8 @@ package gifMasher;
 import haxe.io.Bytes;
 import sys.io.File;
 
+import neko.vm.Lock;
+
 import format.gif.Data;
 
 using Lambda;
@@ -19,8 +21,9 @@ class GifRenderer{
 	 * @param	frames				array of frames, each as a byte array
 	 * @param	tn					this thread number
 	 * @param	tt					number of total threads
+	 * @param 	lock				lock for synchronisation
 	 */
-	public static inline function render(data: Data, frames: Array<Bytes>, tn: Int, tt: Int){
+	public static inline function render(data: Data, frames: Array<Bytes>, tn: Int, tt: Int, lock: Lock=null){
 		
 		var width = data.logicalScreenDescriptor.width;
 		var height = data.logicalScreenDescriptor.height;
@@ -95,13 +98,14 @@ class GifRenderer{
 					
 					//NOW RENDER THE NEW PIXELS
 					var y = (tn >= (frame.y % tt)) ? Math.floor(frame.y / tt) * tt + tn : Math.ceil(frame.y / tt) * tt + tn;
-					//var y = frame.y;
-					var srcPos = 0;
+					
+					var srcPos = (y-frame.y)*frame.width;
 					while (y < frame.y + frame.height){
 						
 						var x = frame.x;
 						while (x < frame.x + frame.width){
 							
+							//if (fNum == 5 && tn == 0){trace(srcPos); }
 							var ind = frame.pixels.get(srcPos);
 							var color: Int;
 							
@@ -123,7 +127,8 @@ class GifRenderer{
 							srcPos++;
 							
 						}
-						
+						//if (fNum == 5 && tn == 0){trace("skip!");}
+						srcPos += (tt-1)*frame.width; //different threads handle different src lines
 						y += tt;
 						
 					}
@@ -144,6 +149,10 @@ class GifRenderer{
 					return;
 			}
 		});
+		
+		if (lock != null){
+			lock.release();
+		}
 		
 	}
 	
