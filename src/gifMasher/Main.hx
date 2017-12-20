@@ -42,6 +42,9 @@ class Main {
 		handler.addArgOption("t".code, "threads", function(arg: String){
 			tt = Std.parseInt(arg);
 		});
+		handler.addArgOption(-1, "revColorTable", function(arg:String){
+			
+		});
 		
 		try{
 			handler.processArguments(Sys.args());
@@ -58,8 +61,10 @@ class Main {
 		var end = Date.now();
 		trace('Gif parsed in ${(end.getTime()-start.getTime())/1000} seconds');
 		
+		PreProcess.removeGces(gifData);
 		//PreProcess.revColorTables(gifData);
-		PreProcess.stretch(gifData);
+		//PreProcess.stretch(gifData, 1);
+		//PreProcess.shuffleTr(gifData);
 		
 		//allocate byte arrays
 		frames = new Array<Bytes>();

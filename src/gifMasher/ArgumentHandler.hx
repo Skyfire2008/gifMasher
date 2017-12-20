@@ -24,7 +24,7 @@ class ArgumentHandler{
 		}
 	}
 
-	public function addNoArgOption(opt: Int, longOpt: String, callback: Void -> Void){
+	public function addNoArgOption(opt: Int=-1, longOpt: String=null, callback: Void -> Void){
 		var option: CallbackHandler=new NoArgCallbackHandler(callback);
 
 		if(opt>=0){
