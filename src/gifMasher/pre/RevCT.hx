@@ -9,8 +9,11 @@ import gifMasher.Utils;
  */
 class RevCT extends PreSeparate{
 
-	public function new(){
+	private var accurate: Bool;
+
+	public function new(accurate: Bool){
 		super();
+		this.accurate=accurate;
 	}
 
 	public override function procGlobal(data: Data): Data{
@@ -28,6 +31,20 @@ class RevCT extends PreSeparate{
 	}
 
 	private function revCT(ct: ColorTable, length: Int){
+
+		if(accurate){
+			var i=(length-1)*3;
+			var color: Int=0;
+			var empty=-1;
+
+			while(color==0){
+				color=(ct.get(i) << 16) | (ct.get(i+1) << 8) | ct.get(i);
+				i-=3;
+				empty++;
+			}
+
+			length-=empty;
+		}
 
 		var cur = 0; //current
 		var opp = (length-1)*3; //opposite

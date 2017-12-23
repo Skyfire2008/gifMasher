@@ -18,11 +18,11 @@ import format.gif.Writer;
 
 import gifMasher.ArgumentHandler;
 
-import gifMasher.pre.PreSeparate;
-import gifMasher.pre.RevCT;
-import gifMasher.pre.ShufCT;
+import gifMasher.pre.*;
+import gifMasher.pre.Stretch.Direction;
 
 using Lambda;
+using haxe.EnumTools;
 
 /**
  * @author skyfire2008
@@ -39,6 +39,8 @@ class Main {
 	static var gifData: Data;
 	
 	static var frames: Array<Bytes>;
+
+	static var preProcesses: Array<PreProcess>=new Array<PreProcess>();
 	
 	static function main(){
 		var handler = new ArgumentHandler();
@@ -51,8 +53,11 @@ class Main {
 		handler.addArgOption("o".code, "output", function(arg: String){
 			outPath=arg;
 		});
-		handler.addArgOption(-1, "revColorTable", function(arg:String){
-			
+		handler.addArgOption(-1, "stretch", function(arg: String){
+			preProcesses.push(new Stretch(Direction.createByName(arg)));
+		});
+		handler.addNoArgOption(-1, "revColorTable", function(){
+			preProcesses.push(new RevCT(true));
 		});
 		
 		try{
@@ -76,8 +81,9 @@ class Main {
 			frames.push(Bytes.alloc(gifData.logicalScreenDescriptor.width * gifData.logicalScreenDescriptor.height * 4));
 		}
 
-		var r=new ShufCT();
-		gifData=r.apply(gifData);
+		for(p in preProcesses){
+			gifData=p.apply(gifData);
+		}
 
 		var writer=new Writer(File.write(outPath == null ? inPath.substring(0, inPath.length-4)+"-output.gif" : outPath));
 		writer.write(gifData);
