@@ -6,13 +6,11 @@ import format.gif.Data;
 
 using Lambda;
 
-/**
- * Contains methods to preprocess gif data
- * @author skyfire2008
- */
-class PreProcess{
+interface PreProcess{
+
+	public function apply(data: Data): Data;
 	
-	public static function removeGces(data: Data){
+	/*public static function removeGces(data: Data){
 		data.blocks = data.blocks.filter(function(b): Bool{
 			var result = false;
 			
@@ -102,50 +100,6 @@ class PreProcess{
 			trInd = bgInd;
 		});
 		
-	}
-	
-	/**
-	 * Reverses the color tables
-	 * @param	data					gif data
-	 */
-	public static function revColorTables(data: Data){
-		if (data.logicalScreenDescriptor.hasGlobalColorTable){
-			revCt(data.globalColorTable, data.logicalScreenDescriptor.globalColorTableSize);
-		}
-		
-		data.blocks.iter(function(b){
-			switch(b){
-				case BFrame(f):
-					if (f.localColorTable){
-						revCt(f.colorTable, f.localColorTableSize);
-					}
-				default:
-					//skip
-			}
-		});
-	}
-	
-	/**
-	 * Reverses a given color table
-	 * @param	ct					color table
-	 * @param	length				color table length
-	 */
-	private static inline function revCt(ct: ColorTable, length: Int){
-		
-		var cur = 0; //current
-		var opp = (length-1)*3; //opposite
-		
-		for (i in 0...(length >> 1)){
-			
-			for (j in 0...3){
-				var temp = ct.get(opp + j);
-				ct.set(opp + j, ct.get(cur + j));
-				ct.set(cur + j, temp);
-			}
-			
-			cur += 3;
-			opp -= 3;
-		}
-	}
+	}*/
 	
 }

@@ -11,11 +11,16 @@ import neko.vm.Lock;
 
 import sys.io.File;
 
-import gifMasher.ArgumentHandler;
-
 import format.gif.Reader;
 import format.gif.Tools;
 import format.gif.Data;
+import format.gif.Writer;
+
+import gifMasher.ArgumentHandler;
+
+import gifMasher.pre.PreSeparate;
+import gifMasher.pre.RevCT;
+import gifMasher.pre.ShufCT;
 
 using Lambda;
 
@@ -26,7 +31,8 @@ class Main {
 	
 	static var stderr = Sys.stderr();
 	
-	static var path: String;
+	static var inPath: String;
+	static var outPath: String=null;
 	
 	static var tt: Int = 1;
 	
@@ -37,10 +43,13 @@ class Main {
 	static function main(){
 		var handler = new ArgumentHandler();
 		handler.addArgOption("i".code, "input", function(arg: String){
-			path = arg;
+			inPath = arg;
 		});
 		handler.addArgOption("t".code, "threads", function(arg: String){
 			tt = Std.parseInt(arg);
+		});
+		handler.addArgOption("o".code, "output", function(arg: String){
+			outPath=arg;
 		});
 		handler.addArgOption(-1, "revColorTable", function(arg:String){
 			
@@ -56,24 +65,25 @@ class Main {
 		//decode the gif
 		trace("Starting to parse the gif...");
 		var start = Date.now();
-		var reader = new Reader(File.read(path));
+		var reader = new Reader(File.read(inPath));
 		gifData = reader.read();
 		var end = Date.now();
 		trace('Gif parsed in ${(end.getTime()-start.getTime())/1000} seconds');
-		
-		PreProcess.removeGces(gifData);
-		//PreProcess.revColorTables(gifData);
-		//PreProcess.stretch(gifData, 1);
-		//PreProcess.shuffleTr(gifData);
 		
 		//allocate byte arrays
 		frames = new Array<Bytes>();
 		for (i in 0...Tools.framesCount(gifData)){
 			frames.push(Bytes.alloc(gifData.logicalScreenDescriptor.width * gifData.logicalScreenDescriptor.height * 4));
 		}
+
+		var r=new ShufCT();
+		gifData=r.apply(gifData);
+
+		var writer=new Writer(File.write(outPath == null ? inPath.substring(0, inPath.length-4)+"-output.gif" : outPath));
+		writer.write(gifData);
 		
 		//render the frames
-		trace("Starting to render the gif...");
+		/*trace("Starting to render the gif...");
 		var start = Date.now();
 		if (tt != 1){
 			var lock = new Lock();
@@ -94,12 +104,9 @@ class Main {
 		for (i in 0...frames.length){
 			var writer = new format.png.Writer(File.write('frame$i.png'));
 			writer.write(format.png.Tools.build32BGRA(gifData.logicalScreenDescriptor.width, gifData.logicalScreenDescriptor.height, frames[i]));
-		}
+		}*/
 		
 		Sys.exit(0);
 		
 	}
-	
-	
-	
 }
