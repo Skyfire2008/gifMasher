@@ -9,6 +9,8 @@ import gifMasher.Utils;
  */
 class ShufCT extends PreSeparate{
 
+	public static var accurate: Bool=true;
+
 	public function new(){
 		super();
 	}
@@ -29,6 +31,20 @@ class ShufCT extends PreSeparate{
 
 	private function shuffleCT(ct: ColorTable, length: Int){
 		var cur: Int=0;
+
+		if(ShufCT.accurate){
+			var i=(length-1)*3;
+			var color: Int=0;
+			var empty=-1;
+
+			while(color==0){
+				color=(ct.get(i) << 16) | (ct.get(i+1) << 8) | ct.get(i);
+				i-=3;
+				empty++;
+			}
+
+			length-=empty;
+		}
 
 		for(i in 0...length){
 			var pos=i+Std.random(length-i);
