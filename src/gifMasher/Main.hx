@@ -4,6 +4,8 @@ import haxe.io.Output;
 import haxe.io.Input;
 import haxe.io.Bytes;
 
+import haxe.io.Path;
+
 import neko.Lib;
 
 import neko.vm.Thread;
@@ -40,12 +42,28 @@ class Main {
 	
 	static var frames: Array<Bytes>;
 
-	static var preProcesses: Array<PreProcess>=new Array<PreProcess>();
+	static var preProcesses: Array<PreProcess> = new Array<PreProcess>();
+	
+	static function usage(){
+		var stdout = Sys.stdout();
+		stdout.writeString('USAGE: ${Path.withoutDirectory(Sys.executablePath())} -i <path to input gif>\n');
+		stdout.writeString("OPTIONAL ARGUMENTS:\n");
+		stdout.writeString("	-o/--output <path to output> - specifies the output path, which by default is the same as input path, but with '-output.gif' appended to it\n");
+		stdout.writeString("	--reverse - reverses the frame order\n");
+		stdout.writeString("	--stretch <direction> - changes the dimensions new pixels of every frame by given direction, valid direction values are UP, DOWN, RIGHT, LEFT, X, Y\n");
+		stdout.writeString("	--revColorTable - reverses every color table\n");
+		stdout.writeString("	--shuffleColorTable - randomly shuffles every color table\n");
+		stdout.writeString("	--swapWH - swaps width and height of every frame\n");
+		stdout.writeString("	-h/--help - prints out this message\n");
+	}
 	
 	static function main(){
 
 		//define command line arguments
 		var handler = new ArgumentHandler();
+		handler.addNoArgOption("h".code, "help", function(){
+			usage();
+		});
 		handler.addArgOption("i".code, "input", function(arg: String){
 			inPath = arg;
 		});
@@ -55,8 +73,12 @@ class Main {
 		handler.addArgOption("o".code, "output", function(arg: String){
 			outPath=arg;
 		});
-		handler.addArgOption(-1, "stretch", function(arg: String){
-			preProcesses.push(new Stretch(Direction.createByName(arg)));
+		handler.addArgOption( -1, "stretch", function(arg: String){
+			try{
+				preProcesses.push(new Stretch(Direction.createByName(arg)));
+			}catch (e: Dynamic){
+				throw '$arg is not a valid direction';
+			}
 		});
 		handler.addNoArgOption(-1, "revColorTable", function(){
 			preProcesses.push(new RevCT());
@@ -74,7 +96,8 @@ class Main {
 		try{
 			handler.processArguments(Sys.args());
 		}catch(e: Dynamic){
-			stderr.writeString(cast(e, String)+"\n");
+			stderr.writeString("\n"+cast(e, String) + "\n\n");
+			usage();
 			Sys.exit(1);
 		}
 		
@@ -87,12 +110,6 @@ class Main {
 
 		var end = Date.now();
 		trace('Gif parsed in ${(end.getTime()-start.getTime())/1000} seconds');
-		
-		//allocate byte arrays
-		/*frames = new Array<Bytes>();
-		for (i in 0...Tools.framesCount(gifData)){
-			frames.push(Bytes.alloc(gifData.logicalScreenDescriptor.width * gifData.logicalScreenDescriptor.height * 4));
-		}*/
 
 		//preprocess the gif
 		trace("Starting to pre-process the gif...");
@@ -107,6 +124,12 @@ class Main {
 		//write the gif
 		var writer=new Writer(File.write(outPath == null ? inPath.substring(0, inPath.length-4)+"-output.gif" : outPath));
 		writer.write(gifData);
+		
+		//allocate byte arrays
+		/*frames = new Array<Bytes>();
+		for (i in 0...Tools.framesCount(gifData)){
+			frames.push(Bytes.alloc(gifData.logicalScreenDescriptor.width * gifData.logicalScreenDescriptor.height * 4));
+		}*/
 		
 		//render the frames
 		/*trace("Starting to render the gif...");
