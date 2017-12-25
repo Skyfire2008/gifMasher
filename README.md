@@ -13,3 +13,5 @@ The basic command is "__gifMasher.exe -i/--input *\<path to input gif\>*__", how
 * __--swapWH__ - swaps width and height of every frame.
 * __-o/--output *\<output path\>*__ - defines the output path, which by default is the same as input path, but with "-output.gif" appended to it.
 * __--stretch *\<stretch direction\>*__ - changes the dimension of every frame. Valid direction values are __LEFT__, __UP__, __DOWN__, __RIGHT__, __X__ and __Y__. Depending on the direction, width or height are stretched, but total area remains largely unchanged.
+* __--randColorTable *\<max random value\>*__ - randomizes every color table values. Randomization is performed channel-wise, new channel value is calculates as follows: *prev value - (max random value/2) + (value between 0 and max random value)*.
+* __--addHue *\<additional hue value\>*__ - changes every frame color table. To do so, it converts every color to HSL representation, adds the provided value multiplied by the frame number to its hue, then converts it back to RGB and stores it in the color table. If the provided value is 0, it takes the default, which is 360/total number of frames.

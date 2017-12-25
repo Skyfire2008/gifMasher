@@ -20,6 +20,8 @@ import format.gif.Writer;
 
 import gifMasher.ArgumentHandler;
 
+import gifMasher.graphics.Color;
+
 import gifMasher.pre.*;
 import gifMasher.pre.Stretch.Direction;
 
@@ -54,6 +56,8 @@ class Main {
 		stdout.writeString("	--revColorTable - reverses every color table\n");
 		stdout.writeString("	--shuffleColorTable - randomly shuffles every color table\n");
 		stdout.writeString("	--swapWH - swaps width and height of every frame\n");
+		stdout.writeString("	--randColorTable <max random value> - randomizes every color table color channel");
+		stdout.writeString("	--addHue <hue> - modifies frame color tables, by adding given hue value to every color. If a frame doesn't have a color table, it's assigned the global color table. If additional hue value is 0, it's set to 360/(number of frames)");
 		stdout.writeString("	-h/--help - prints out this message\n");
 	}
 	
@@ -91,6 +95,12 @@ class Main {
 		});
 		handler.addNoArgOption(-1, "swapWH", function(){
 			preProcesses.push(new SwapWH());
+		});
+		handler.addArgOption( -1, "randColorTable", function(arg: String){
+			preProcesses.push(new RandCT(Std.parseInt(arg)));
+		});
+		handler.addArgOption( -1, "addHue", function(arg: String){
+			preProcesses.push(new AddHue(Std.parseFloat(arg)));
 		});
 		
 		try{
